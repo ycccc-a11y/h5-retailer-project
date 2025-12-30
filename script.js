@@ -111,17 +111,24 @@ async function searchByLicenseNumber() {
 function displaySearchResult(result) {
     const searchResult = document.getElementById('search-result');
     
+    // 字段映射：后端API返回的是英文字段名
+    const licenseNumber = result.license_number;
+    const customerName = result.customer_name;
+    const address = result.address;
+    const longitude = result.longitude;
+    const latitude = result.latitude;
+    
     searchResult.innerHTML = `
         <div class="result-item">
             <h3>搜索结果</h3>
             <div class="result-details">
-                <p><strong>许可证号码:</strong> ${result.许可证号}</p>
-                <p><strong>商户名称:</strong> ${result.客户名称}</p>
-                <p><strong>经营地址:</strong> ${result.经营地址}</p>
-                <p><strong>经度:</strong> ${result.经度}</p>
-                <p><strong>纬度:</strong> ${result.纬度}</p>
+                <p><strong>许可证号码:</strong> ${licenseNumber}</p>
+                <p><strong>商户名称:</strong> ${customerName}</p>
+                <p><strong>经营地址:</strong> ${address}</p>
+                <p><strong>经度:</strong> ${longitude}</p>
+                <p><strong>纬度:</strong> ${latitude}</p>
             </div>
-            <button class="add-to-route" onclick="addToRoute('${result.许可证号}', '${result.客户名称}', ${result.经度}, ${result.纬度}, '${result.经营地址}')">添加到路线</button>
+            <button class="add-to-route" onclick="addToRoute('${licenseNumber}', '${customerName}', ${longitude}, ${latitude}, '${address}')">添加到路线</button>
         </div>
     `;
 }
