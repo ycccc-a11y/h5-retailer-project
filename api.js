@@ -51,27 +51,46 @@ async function searchPlaceByKeyword(keyword, city) {
     }
 }
 
-// 许可证号码搜索API
-async function searchLicenseInDatabase(licenseNumber) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/search/${licenseNumber}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
+// 许可证号码搜索API（带超时和重试机制）
+async function searchLicenseInDatabase(licenseNumber, retryCount = 2) {
+    for (let attempt = 0; attempt <= retryCount; attempt++) {
+        try {
+            // 创建超时控制器
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+            
+            const response = await fetch(`${API_BASE_URL}/api/search/${licenseNumber}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+                const data = await response.json();
+                return data;
+            } else if (response.status === 404) {
+                return null; // 未找到数据
+            } else {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            return data;
-        } else if (response.status === 404) {
-            return null; // 未找到数据
-        } else {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        } catch (error) {
+            console.error(`许可证搜索API调用失败 (尝试 ${attempt + 1}/${retryCount + 1}):`, error);
+            
+            // 如果是最后一次尝试，抛出错误
+            if (attempt === retryCount) {
+                if (error.name === 'AbortError') {
+                    throw new Error('请求超时，请检查网络连接');
+                }
+                throw new Error('网络错误或服务器不可用，请重试');
+            }
+            
+            // 等待一段时间后重试
+            await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
         }
-    } catch (error) {
-        console.error('许可证搜索API调用失败:', error);
-        throw new Error('网络错误或服务器不可用');
     }
 }
 
