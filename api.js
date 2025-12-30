@@ -95,7 +95,7 @@ async function getRoutineInspectionData() {
     return [];
 }
 
-// 路径规划接口 
+// 路径规划接口 - 更新为使用/api/index端点
 async function planRouteWithAMap(payload) {
     const requestPayload = Array.isArray(payload) ? { points: payload } : (payload || {});
     const points = Array.isArray(requestPayload.points) ? requestPayload.points : [];
@@ -105,7 +105,7 @@ async function planRouteWithAMap(payload) {
     console.log(`发送路径规划请求，包含 ${points.length} 个点，策略 ${requestPayload.strategy}`, requestPayload);
     // 通过后端API调用路径规划
     try {
-        const response = await fetch(`${API_BASE_URL}/api/plan/route`, {
+        const response = await fetch(`${API_BASE_URL}/api/index`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
