@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>涉企行政检查路线规划系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- 高德地图API -->
+    <script src="https://webapi.amap.com/maps?v=1.4.15&key=5214720567b04bff9587ddc180b8d8de"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>涉企行政检查路线规划系统</h1>
+        </header>
+        
+        <main>
+            <div class="main-content">
+                <!-- 许可证号码搜索区域 -->
+                <section class="search-section">
+                    <h2>许可证号码搜索（临时任务）</h2>
+                    <div class="search-container">
+                        <input type="text" id="license-number-input" placeholder="请输入许可证号码" />
+                        <button class="search-button" onclick="searchByLicenseNumber()">搜索</button>
+                    </div>
+                    <div class="search-result" id="search-result" style="display: none;">
+                        <!-- 搜索结果将在这里显示 -->
+                    </div>
+                </section>
+                
+                <!-- 任务池区域 -->
+                <section class="task-pool-section">
+                    <h2>任务池</h2>
+                    <div class="task-categories">
+                        <div class="category">
+                            <div class="category-header" onclick="toggleCategory('priority')">
+                                <span>重点检查</span>
+                                <button type="button" class="add-license-btn" onclick="event.stopPropagation(); openLicenseSearch();">＋</button>
+                                <span class="arrow">▼</span>
+                            </div>
+                            <div class="category-items" id="priority-items">
+                                <!-- 动态加载重点检查任务 -->
+                                <div class="loading-message">正在加载重点检查任务...</div>
+                            </div>
+                        </div>
+                        
+                        <div class="category">
+                            <div class="category-header" onclick="toggleCategory('random')">
+                                <span>随机抽查</span>
+                                <button type="button" class="add-license-btn" onclick="event.stopPropagation(); openLicenseSearch('random');">＋</button>
+                                <span class="arrow">▼</span>
+                            </div>
+                            <div class="category-items" id="random-items">
+                                <!-- 动态加载随机抽查任务 -->
+                                <div class="loading-message">正在加载随机抽查任务...</div>
+                            </div>
+                        </div>
+                        
+                        <div class="category">
+                            <div class="category-header" onclick="toggleCategory('permit')">
+                                <span>许可核查</span>
+                                <button type="button" class="add-license-btn" onclick="event.stopPropagation(); openLicenseSearch('permit');">＋</button>
+                                <span class="arrow">▼</span>
+                            </div>
+                            <div class="category-items" id="permit-items">
+                                <!-- 动态加载许可核查任务 -->
+                                <div class="loading-message">正在加载许可核查任务...</div>
+                            </div>
+                        </div>
+                        
+                        <div class="category">
+                            <div class="category-header" onclick="toggleCategory('routine')">
+                                <span>日常检查</span>
+                                <button type="button" class="add-license-btn" onclick="event.stopPropagation(); openLicenseSearch('routine');">＋</button>
+                                <span class="arrow">▼</span>
+                            </div>
+                            <div class="category-items" id="routine-items">
+                                <!-- 动态加载日常检查任务 -->
+                                <div class="loading-message">正在加载日常检查任务...</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 操作按钮区域 -->
+                <section class="action-section">
+                    <!-- 起点搜索区域 -->
+                    <div class="start-point-search">
+                        <input type="text" id="start-point-input" class="start-point-input" 
+                               placeholder="搜索起点（可选）" 
+                               onkeypress="if(event.key === 'Enter') searchStartPoint()">
+                        <button class="search-start-btn" onclick="searchStartPoint()">
+                            <span class="search-icon">🔍</span>
+                            搜索
+                        </button>
+                        <button class="locate-start-btn" id="locate-start-btn" onclick="locateCurrentStartPoint()">
+                            使用当前位置
+                        </button>
+                        <button class="clear-start-btn" id="clear-start-btn" onclick="clearStartPoint()" style="display: none;">
+                            <span>×</span>
+                        </button>
+                    </div>
+                    <div class="start-point-result" id="start-point-result" style="display: none;">
+                        <span class="result-label">起点:</span>
+                        <span id="start-point-name"></span>
+                        <button class="clear-start-btn-small" onclick="clearStartPoint()">×</button>
+                    </div>
+                    <button class="plan-button" onclick="planRoute()">
+                        一键智能规划路线
+                    </button>
+                </section>
+                
+                <!-- 路线显示窗口 -->
+                <section class="route-display-section">
+                    <h2>规划路线</h2>
+                    <div class="route-window" id="route-window">
+                        <div class="selected-summary" id="selected-summary" style="display: none;"></div>
+                        <div id="route-map" class="route-map"></div>
+                        <div class="route-placeholder">
+                        </div>
+                        <div class="route-content" id="route-content" style="display: none;">
+                            <!-- 路线内容将在这里动态生成 -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
