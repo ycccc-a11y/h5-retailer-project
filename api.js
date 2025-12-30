@@ -51,7 +51,7 @@ async function searchPlaceByKeyword(keyword, city) {
     }
 }
 
-// 许可证号码搜索API（修复版本）
+// 许可证号码搜索API（简化版本，不使用AbortController）
 async function searchLicenseInDatabase(licenseNumber, retryCount = 2) {
     console.log('开始搜索许可证:', licenseNumber);
     
@@ -59,73 +59,52 @@ async function searchLicenseInDatabase(licenseNumber, retryCount = 2) {
         try {
             console.log('尝试次数:', attempt + 1, '/', retryCount + 1);
             
-            // 检查AbortController是否支持
-            const supportsAbortController = typeof AbortController !== 'undefined';
-            console.log('浏览器支持AbortController:', supportsAbortController);
-            
-            let timeoutId;
-            let response;
-            
-            const fetchOptions = {
+            // 使用Promise.race实现超时，不依赖AbortController
+            const fetchPromise = fetch(`${API_BASE_URL}/api/search/${licenseNumber}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
                 }
-            };
+            });
             
-            if (supportsAbortController) {
-                // 使用AbortController实现超时
-                const controller = new AbortController();
-                fetchOptions.signal = controller.signal;
-                
-                timeoutId = setTimeout(() => {
-                    console.log('请求超时，中止请求');
-                    controller.abort();
-                }, 10000);
-                
-                response = await fetch(`${API_BASE_URL}/api/search/${licenseNumber}`, fetchOptions);
-                clearTimeout(timeoutId);
-            } else {
-                // 降级方案：使用Promise.race实现超时
-                console.log('使用降级方案（Promise.race）');
-                const fetchPromise = fetch(`${API_BASE_URL}/api/search/${licenseNumber}`, fetchOptions);
-                const timeoutPromise = new Promise((_, reject) => {
-                    timeoutId = setTimeout(() => {
-                        reject(new Error('请求超时'));
-                    }, 10000);
-                });
-                
-                response = await Promise.race([fetchPromise, timeoutPromise]);
-                clearTimeout(timeoutId);
-            }
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                    reject(new Error('请求超时（15秒）'));
+                }, 15000); // 15秒超时
+            });
             
-            console.log('API响应状态:', response.status);
+            console.log('发起API请求...');
+            const response = await Promise.race([fetchPromise, timeoutPromise]);
+            
+            console.log('收到响应，状态码:', response.status);
             
             if (response.ok) {
                 const data = await response.json();
-                console.log('搜索成功，返回数据:', data);
+                console.log('搜索成功！返回数据:', data);
                 return data;
             } else if (response.status === 404) {
                 console.log('未找到数据（404）');
                 return null;
             } else {
-                throw new Error('HTTP error! status: ' + response.status);
+                throw new Error('HTTP错误，状态码: ' + response.status);
             }
         } catch (error) {
-            console.error('许可证搜索API调用失败 (尝试', attempt + 1, '/', retryCount + 1, '):', error);
-            console.error('错误详情:', error.message, error.name);
+            console.error('搜索失败 (尝试', attempt + 1, '/', retryCount + 1, ')');
+            console.error('错误类型:', error.name);
+            console.error('错误信息:', error.message);
             
             // 如果是最后一次尝试，抛出错误
             if (attempt === retryCount) {
-                if (error.name === 'AbortError' || error.message === '请求超时') {
+                if (error.message && error.message.includes('超时')) {
                     throw new Error('请求超时，请检查网络连接');
                 }
-                throw new Error('网络错误或服务器不可用，请重试');
+                throw new Error('网络错误: ' + error.message);
             }
             
-            // 等待一段时间后重试
-            console.log('等待', (attempt + 1), '秒后重试...');
-            await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+            // 等待后重试
+            const waitTime = (attempt + 1) * 1000;
+            console.log('等待', waitTime / 1000, '秒后重试...');
+            await new Promise(resolve => setTimeout(resolve, waitTime));
         }
     }
 }
