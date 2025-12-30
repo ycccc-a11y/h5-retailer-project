@@ -148,6 +148,10 @@ async function planRouteWithAMap(payload) {
                 data.path = path;
                 console.log(`转换后的path包含 ${path.length} 个点`);
             }
+            // 如果后端没有返回optimizationRate，使用calculateOptimizationRate生成
+            if (!data.optimizationRate) {
+                data.optimizationRate = calculateOptimizationRate();
+            }
             return data;
         } else {
             const error = await response.json();
