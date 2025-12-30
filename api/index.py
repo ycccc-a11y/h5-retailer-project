@@ -9,7 +9,7 @@ DB_CONFIG = {
     'host': 'gateway01.us-west-2.prod.aws.tidbcloud.com',
     'port': 4000,
     'user': '3HMtcKN9jJhR99t.root',
-    'password': '1Ufugqc0Bt0OqbSW',
+    'password': 'YrIJuTT8iDQ0ODUW',
     'database': 'locationnt',
     'ssl': {'ca': '/etc/ssl/certs/ca-certificates.crt'},
     'charset': 'utf8mb4',
