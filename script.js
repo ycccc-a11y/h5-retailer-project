@@ -724,6 +724,8 @@ async function planRouteInternal({ silent = false, reason = 'manual', resetConte
 
 // 智能路线规划功能
 async function planRoute() {
+    console.log('=== planRoute 函数被调用 ===');
+    alert('开始路线规划...');
     try {
         const result = await planRouteInternal({ silent: false, reason: 'manual', resetContent: true });
         if (!result) return;
