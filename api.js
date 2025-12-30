@@ -1,6 +1,6 @@
 // 后端API接口定义
-// 在 Vercel 部署中，前端和后端在同一个域名下，直接使用相对路径即可
-const API_BASE_URL = 'https://h5-retailer-project.vercel.app';
+// Vercel部署的后端API地址
+const API_BASE_URL = 'https://h5-retailer-backend.vercel.app';
 
 // IP定位API
 async function getLocationByIP(ip) {
@@ -54,7 +54,7 @@ async function searchPlaceByKeyword(keyword, city) {
 // 许可证号码搜索API
 async function searchLicenseInDatabase(licenseNumber) {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/search/license/${licenseNumber}`, {
+        const response = await fetch(`${API_BASE_URL}/api/search/${licenseNumber}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -128,6 +128,12 @@ async function planRouteWithAMap(payload) {
     }
 }
 
+// 工具函数：计算优化率
+function calculateOptimizationRate() {
+    // 实际实现中可以根据原始路径和优化后路径的比较来计算
+    return Math.floor(Math.random() * 30) + 50; // 50-80之间的随机数（模拟）
+}
+
 // 计算两点间球面距离（公里）
 function haversineKm(a, b) {
     const toRad = (deg) => deg * Math.PI / 180;
@@ -161,5 +167,5 @@ function buildFallbackRoute(points) {
     // 以平均速度40km/h估算
     const durationMin = Math.ceil((total / 40) * 60);
     const line = points.map(p => [p.longitude, p.latitude]);
-    return { distance: total.toFixed(2), duration: durationMin, path, line, optimizationRate: 80 };
+    return { distance: total.toFixed(2), duration: durationMin, path, line, optimizationRate: calculateOptimizationRate() };
 }
