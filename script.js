@@ -1598,7 +1598,15 @@ async function performQuickLicenseSearch(categoryId = 'priority') {
 // 将搜索结果渲染为对应分组的任务项（可删除）
 function addCategoryItemFromResult(categoryId, result) {
     const container = document.getElementById(`${categoryId}-items`);
-    const id = `${categoryId}-task-${result.许可证号}`;
+    
+    // 字段映射：后端API返回的是英文字段名
+    const licenseNumber = result.license_number;
+    const customerName = result.customer_name;
+    const address = result.address;
+    const longitude = result.longitude;
+    const latitude = result.latitude;
+    
+    const id = `${categoryId}-task-${licenseNumber}`;
     if (document.getElementById(id)) {
         alert('该许可证已在列表中');
         return;
@@ -1608,10 +1616,10 @@ function addCategoryItemFromResult(categoryId, result) {
     taskItem.className = 'task-item';
     taskItem.innerHTML = `
         <input type="checkbox" id="${id}" name="${id}"
-               data-longitude="${result.经度}" data-latitude="${result.纬度 || ''}"
-               data-address="${result.经营地址}" data-name="${result.客户名称}">
-        <label for="${id}">${result.客户名称}</label>
-        <span class="address-info">${result.经营地址}</span>
+               data-longitude="${longitude}" data-latitude="${latitude || ''}"
+               data-address="${address}" data-name="${customerName}">
+        <label for="${id}">${customerName}</label>
+        <span class="address-info">${address}</span>
         <span class="category-badge">${{ priority: '重点检查', random: '随机抽查', permit: '许可核查', routine: '日常检查' }[categoryId] || ''}</span>
         <button type="button" class="delete-btn" onclick="deleteTaskItem(this)">×</button>
     `;
