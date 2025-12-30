@@ -1,6 +1,6 @@
 // 后端API接口定义
 // 在 Vercel 部署中，前端和后端在同一个域名下，直接使用相对路径即可
-const API_BASE_URL = '';
+const API_BASE_URL = 'https://h5-retailer-project.vercel.app';
 
 // IP定位API
 async function getLocationByIP(ip) {
