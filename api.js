@@ -51,7 +51,7 @@ async function searchPlaceByKeyword(keyword, city) {
     }
 }
 
-// 许可证号码搜索API（带超时和重试机制，兼容旧浏览器）
+// 许可证号码搜索API（修复版本）
 async function searchLicenseInDatabase(licenseNumber, retryCount = 2) {
     console.log('开始搜索许可证:', licenseNumber);
     
@@ -61,7 +61,10 @@ async function searchLicenseInDatabase(licenseNumber, retryCount = 2) {
             
             // 检查AbortController是否支持
             const supportsAbortController = typeof AbortController !== 'undefined';
-            let controller, timeoutId, timeoutPromise;
+            console.log('浏览器支持AbortController:', supportsAbortController);
+            
+            let timeoutId;
+            let response;
             
             const fetchOptions = {
                 method: 'GET',
@@ -70,30 +73,31 @@ async function searchLicenseInDatabase(licenseNumber, retryCount = 2) {
                 }
             };
             
-            // 创建fetch promise
-            const fetchPromise = fetch(`${API_BASE_URL}/api/search/${licenseNumber}`, fetchOptions);
-            
-            // 如果支持AbortController，使用它
             if (supportsAbortController) {
-                controller = new AbortController();
-                timeoutId = setTimeout(() => controller.abort(), 10000);
+                // 使用AbortController实现超时
+                const controller = new AbortController();
                 fetchOptions.signal = controller.signal;
+                
+                timeoutId = setTimeout(() => {
+                    console.log('请求超时，中止请求');
+                    controller.abort();
+                }, 10000);
+                
+                response = await fetch(`${API_BASE_URL}/api/search/${licenseNumber}`, fetchOptions);
+                clearTimeout(timeoutId);
             } else {
                 // 降级方案：使用Promise.race实现超时
-                timeoutPromise = new Promise((_, reject) => {
-                    timeoutId = setTimeout(() => reject(new Error('请求超时')), 10000);
+                console.log('使用降级方案（Promise.race）');
+                const fetchPromise = fetch(`${API_BASE_URL}/api/search/${licenseNumber}`, fetchOptions);
+                const timeoutPromise = new Promise((_, reject) => {
+                    timeoutId = setTimeout(() => {
+                        reject(new Error('请求超时'));
+                    }, 10000);
                 });
-            }
-            
-            // 执行请求
-            let response;
-            if (supportsAbortController) {
-                response = await fetch(`${API_BASE_URL}/api/search/${licenseNumber}`, fetchOptions);
-            } else {
+                
                 response = await Promise.race([fetchPromise, timeoutPromise]);
+                clearTimeout(timeoutId);
             }
-            
-            if (timeoutId) clearTimeout(timeoutId);
             
             console.log('API响应状态:', response.status);
             
@@ -102,7 +106,7 @@ async function searchLicenseInDatabase(licenseNumber, retryCount = 2) {
                 console.log('搜索成功，返回数据:', data);
                 return data;
             } else if (response.status === 404) {
-                console.log('未找到数据');
+                console.log('未找到数据（404）');
                 return null;
             } else {
                 throw new Error('HTTP error! status: ' + response.status);
