@@ -115,6 +115,39 @@ async function planRouteWithAMap(payload) {
         
         if (response.ok) {
             const data = await response.json();
+            // 转换后端返回的segments格式为前端期望的path格式
+            if (data.segments && Array.isArray(data.segments) && data.segments.length > 0) {
+                const path = [];
+                data.segments.forEach((seg, index) => {
+                    // 添加起点（仅第一段）
+                    if (index === 0 && seg.from) {
+                        path.push({
+                            step: 1,
+                            name: seg.from.name || `点${index + 1}`,
+                            longitude: seg.from.longitude,
+                            latitude: seg.from.latitude,
+                            address: seg.from.address || '',
+                            distanceToNext: seg.distance || 0,
+                            durationToNext: seg.duration || 0
+                        });
+                    }
+                    // 添加终点
+                    if (seg.to) {
+                        const nextSeg = data.segments[index + 1];
+                        path.push({
+                            step: index + 2,
+                            name: seg.to.name || `点${index + 2}`,
+                            longitude: seg.to.longitude,
+                            latitude: seg.to.latitude,
+                            address: seg.to.address || '',
+                            distanceToNext: nextSeg ? nextSeg.distance : 0,
+                            durationToNext: nextSeg ? nextSeg.duration : 0
+                        });
+                    }
+                });
+                data.path = path;
+                console.log(`转换后的path包含 ${path.length} 个点`);
+            }
             return data;
         } else {
             const error = await response.json();
